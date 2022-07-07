@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserMapper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">upprpo</a> &gt; <a href="index.source.html" class="el_package">ru.nsu.store.mapper</a> &gt; <span class="el_source">UserMapper.java</span></div><h1>UserMapper.java</h1><pre class="source lang-java linenums">package ru.nsu.store.mapper;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+import org.springframework.validation.BindingResult;
+import ru.nsu.store.dto.perfume.PerfumeResponse;
+import ru.nsu.store.dto.review.ReviewRequest;
+import ru.nsu.store.dto.user.UserRequest;
+import ru.nsu.store.dto.user.UserResponse;
+import ru.nsu.store.entity.Review;
+import ru.nsu.store.entity.User;
+import ru.nsu.store.exception.InputFieldException;
+import ru.nsu.store.service.interfaces.UserService;
+
+import java.util.List;
+
+@Component
+@RequiredArgsConstructor
+public class UserMapper {
+
+    private final CommonMapper commonMapper;
+    private final UserService userService;
+
+    public UserResponse findUserById(Long userId) {
+<span class="fc" id="L25">        return commonMapper.convertToResponse(userService.findUserById(userId), UserResponse.class);</span>
+    }
+
+    public UserResponse findUserByEmail(String email) {
+<span class="fc" id="L29">        return commonMapper.convertToResponse(userService.findUserByEmail(email), UserResponse.class);</span>
+    }
+
+    public List&lt;PerfumeResponse&gt; getCart(List&lt;Long&gt; perfumesIds) {
+<span class="fc" id="L33">        return commonMapper.convertToResponseList(userService.getCart(perfumesIds), PerfumeResponse.class);</span>
+    }
+
+    public List&lt;UserResponse&gt; findAllUsers() {
+<span class="fc" id="L37">        return commonMapper.convertToResponseList(userService.findAllUsers(), UserResponse.class);</span>
+    }
+
+    public void updateUserStatus(Long userId) {
+<span class="fc" id="L41">        userService.updateUserStatus(userId);</span>
+<span class="fc" id="L42">    }</span>
+
+    public UserResponse updateProfile(String email, UserRequest userRequest, BindingResult bindingResult) {
+<span class="pc bpc" id="L45" title="1 of 2 branches missed.">        if (bindingResult.hasErrors()) {</span>
+<span class="nc" id="L46">            throw new InputFieldException(bindingResult);</span>
+        }
+<span class="fc" id="L48">        User user = commonMapper.convertToEntity(userRequest, User.class);</span>
+<span class="fc" id="L49">        return commonMapper.convertToResponse(userService.updateProfile(email, user), UserResponse.class);</span>
+    }
+
+    public PerfumeResponse addReviewToPerfume(ReviewRequest reviewRequest, Long perfumeId, BindingResult bindingResult) {
+<span class="pc bpc" id="L53" title="1 of 2 branches missed.">        if (bindingResult.hasErrors()) {</span>
+<span class="nc" id="L54">            throw new InputFieldException(bindingResult);</span>
+        }
+<span class="fc" id="L56">        Review review = commonMapper.convertToEntity(reviewRequest, Review.class);</span>
+<span class="fc" id="L57">        return commonMapper.convertToResponse(userService.addReviewToPerfume(review, perfumeId), PerfumeResponse.class);</span>
+    }
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

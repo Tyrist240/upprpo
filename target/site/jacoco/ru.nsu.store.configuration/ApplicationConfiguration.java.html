@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ApplicationConfiguration.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">upprpo</a> &gt; <a href="index.source.html" class="el_package">ru.nsu.store.configuration</a> &gt; <span class="el_source">ApplicationConfiguration.java</span></div><h1>ApplicationConfiguration.java</h1><pre class="source lang-java linenums">package ru.nsu.store.configuration;
+
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import lombok.Setter;
+import org.modelmapper.ModelMapper;
+import org.modelmapper.convention.MatchingStrategies;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+@Setter
+@Configuration
+<span class="fc" id="L19">public class ApplicationConfiguration {</span>
+
+    @Value(&quot;${amazon.aws.access-key}&quot;)
+    private String awsAccessKey;
+
+    @Value(&quot;${amazon.aws.secret-key}&quot;)
+    private String awsAccessSecret;
+
+    @Bean
+    public PasswordEncoder getPasswordEncoder() {
+<span class="fc" id="L29">        return new BCryptPasswordEncoder(8);</span>
+    }
+
+    @Bean
+    public AmazonS3 s3Client() {
+<span class="fc" id="L34">        AWSCredentials credentials = new BasicAWSCredentials(awsAccessKey, awsAccessSecret);</span>
+<span class="fc" id="L35">        return AmazonS3ClientBuilder.standard()</span>
+<span class="fc" id="L36">                .withCredentials(new AWSStaticCredentialsProvider(credentials))</span>
+<span class="fc" id="L37">                .withEndpointConfiguration(</span>
+                        new AmazonS3ClientBuilder.EndpointConfiguration(
+                                &quot;storage.yandexcloud.net&quot;,&quot;ru-central1&quot;
+                        )
+                )
+<span class="fc" id="L42">                .build();</span>
+    }
+
+    @Bean
+    public ModelMapper modelMapper() {
+<span class="fc" id="L47">        ModelMapper mapper = new ModelMapper();</span>
+<span class="fc" id="L48">        mapper.getConfiguration()</span>
+<span class="fc" id="L49">                .setMatchingStrategy(MatchingStrategies.STRICT);</span>
+<span class="fc" id="L50">        return mapper;</span>
+    }
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

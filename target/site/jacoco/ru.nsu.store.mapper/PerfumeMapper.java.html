@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PerfumeMapper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">upprpo</a> &gt; <a href="index.source.html" class="el_package">ru.nsu.store.mapper</a> &gt; <span class="el_source">PerfumeMapper.java</span></div><h1>PerfumeMapper.java</h1><pre class="source lang-java linenums">package ru.nsu.store.mapper;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.multipart.MultipartFile;
+import ru.nsu.store.dto.perfume.PerfumeRequest;
+import ru.nsu.store.dto.perfume.PerfumeResponse;
+import ru.nsu.store.entity.Perfume;
+import ru.nsu.store.exception.InputFieldException;
+import ru.nsu.store.service.interfaces.PerfumeService;
+
+import java.util.List;
+
+@Component
+@RequiredArgsConstructor
+public class PerfumeMapper {
+
+    private final CommonMapper commonMapper;
+    private final PerfumeService perfumeService;
+
+    public PerfumeResponse findPerfumeById(Long perfumeId) {
+<span class="fc" id="L23">        return commonMapper.convertToResponse(perfumeService.findPerfumeById(perfumeId), PerfumeResponse.class);</span>
+    }
+
+    public List&lt;PerfumeResponse&gt; findPerfumesByIds(List&lt;Long&gt; perfumesId) {
+<span class="fc" id="L27">        return commonMapper.convertToResponseList(perfumeService.findPerfumesByIds(perfumesId), PerfumeResponse.class);</span>
+    }
+
+    public List&lt;PerfumeResponse&gt; findAllPerfumes() {
+<span class="fc" id="L31">        return commonMapper.convertToResponseList(perfumeService.findAllPerfumes(), PerfumeResponse.class);</span>
+    }
+
+    public List&lt;PerfumeResponse&gt; filter(List&lt;String&gt; perfumers, List&lt;String&gt; genders, List&lt;Integer&gt; prices,
+                                        boolean sortByPrice, List&lt;Integer&gt; years, List&lt;String&gt; volumes,
+                                        List&lt;String&gt; types) {
+<span class="fc" id="L37">        List&lt;Perfume&gt; perfumeList = perfumeService.filter(perfumers, genders, prices, sortByPrice, years, volumes, types);</span>
+<span class="fc" id="L38">        return commonMapper.convertToResponseList(perfumeList, PerfumeResponse.class);</span>
+    }
+
+    public List&lt;PerfumeResponse&gt; findByPerfumerOrderByPriceDesc(String perfumer) {
+<span class="fc" id="L42">        return commonMapper.convertToResponseList(perfumeService.findByPerfumerOrderByPriceDesc(perfumer),</span>
+                PerfumeResponse.class);
+    }
+
+    public List&lt;PerfumeResponse&gt; findByPerfumeGenderOrderByPriceDesc(String perfumeGender) {
+<span class="fc" id="L47">        return commonMapper.convertToResponseList(perfumeService.findByPerfumeGenderOrderByPriceDesc(perfumeGender),</span>
+                PerfumeResponse.class);
+    }
+
+    public PerfumeResponse savePerfume(PerfumeRequest perfumeRequest, MultipartFile file,
+                                       BindingResult bindingResult) {
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        if (bindingResult.hasErrors()) {</span>
+<span class="fc" id="L54">            throw new InputFieldException(bindingResult);</span>
+        }
+
+<span class="fc" id="L57">        Perfume perfume = commonMapper.convertToEntity(perfumeRequest, Perfume.class);</span>
+
+<span class="fc" id="L59">        return commonMapper.convertToResponse(perfumeService.savePerfume(perfume, file), PerfumeResponse.class);</span>
+    }
+
+    public List&lt;PerfumeResponse&gt; deleteOrder(Long perfumeId) {
+<span class="fc" id="L63">        return commonMapper.convertToResponseList(perfumeService.deletePerfume(perfumeId), PerfumeResponse.class);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

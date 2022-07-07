@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PerfumeController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">upprpo</a> &gt; <a href="index.source.html" class="el_package">ru.nsu.store.controller</a> &gt; <span class="el_source">PerfumeController.java</span></div><h1>PerfumeController.java</h1><pre class="source lang-java linenums">package ru.nsu.store.controller;
+
+import graphql.ExecutionResult;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import ru.nsu.store.dto.GraphQLRequest;
+import ru.nsu.store.dto.perfume.PerfumeResponse;
+import ru.nsu.store.dto.perfume.PerfumeSearchRequest;
+import ru.nsu.store.mapper.PerfumeMapper;
+import ru.nsu.store.service.graphql.GraphQLProvider;
+
+import java.util.List;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping(&quot;/api/v1/perfumes&quot;)
+public class PerfumeController {
+
+    private final PerfumeMapper perfumeMapper;
+    private final GraphQLProvider graphQLProvider;
+
+    @GetMapping
+    public ResponseEntity&lt;List&lt;PerfumeResponse&gt;&gt; getAllPerfumes() {
+<span class="fc" id="L25">        return ResponseEntity.ok(perfumeMapper.findAllPerfumes());</span>
+    }
+
+    @GetMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;PerfumeResponse&gt; getPerfume(@PathVariable(&quot;id&quot;) Long perfumeId) {
+<span class="fc" id="L30">        return ResponseEntity.ok(perfumeMapper.findPerfumeById(perfumeId));</span>
+    }
+
+    @PostMapping(&quot;/ids&quot;)
+    public ResponseEntity&lt;List&lt;PerfumeResponse&gt;&gt; getPerfumesByIds(@RequestBody List&lt;Long&gt; perfumesIds) {
+<span class="fc" id="L35">        return ResponseEntity.ok(perfumeMapper.findPerfumesByIds(perfumesIds));</span>
+    }
+
+    @PostMapping(&quot;/search&quot;)
+    public ResponseEntity&lt;List&lt;PerfumeResponse&gt;&gt; findPerfumesByFilterParams(@RequestBody PerfumeSearchRequest filter) {
+<span class="fc" id="L40">        return ResponseEntity.ok(perfumeMapper.filter(</span>
+<span class="fc" id="L41">                filter.getPerfumers(),</span>
+<span class="fc" id="L42">                filter.getGenders(),</span>
+<span class="fc" id="L43">                filter.getPrices(),</span>
+<span class="fc" id="L44">                filter.isSortByPrice(),</span>
+<span class="fc" id="L45">                filter.getYears(),</span>
+<span class="fc" id="L46">                filter.getVolumes(),</span>
+<span class="fc" id="L47">                filter.getTypes()</span>
+        ));
+    }
+
+    @PostMapping(&quot;/search/gender&quot;)
+    public ResponseEntity&lt;List&lt;PerfumeResponse&gt;&gt; findByPerfumeGender(@RequestBody PerfumeSearchRequest filter) {
+<span class="fc" id="L53">        return ResponseEntity.ok(perfumeMapper.findByPerfumeGenderOrderByPriceDesc(filter.getPerfumeGender()));</span>
+    }
+
+    @PostMapping(&quot;/search/perfumer&quot;)
+    public ResponseEntity&lt;List&lt;PerfumeResponse&gt;&gt; findByPerfumer(@RequestBody PerfumeSearchRequest filter) {
+<span class="fc" id="L58">        return ResponseEntity.ok(perfumeMapper.findByPerfumerOrderByPriceDesc(filter.getPerfumer()));</span>
+    }
+
+    @PostMapping(&quot;/graphql/ids&quot;)
+    public ResponseEntity&lt;ExecutionResult&gt; getPerfumesByIdsQuery(@RequestBody GraphQLRequest request) {
+<span class="fc" id="L63">        return ResponseEntity.ok(graphQLProvider.getGraphQL().execute(request.getQuery()));</span>
+    }
+
+    @PostMapping(&quot;/graphql/perfumes&quot;)
+    public ResponseEntity&lt;ExecutionResult&gt; getAllPerfumesByQuery(@RequestBody GraphQLRequest request) {
+<span class="fc" id="L68">        return ResponseEntity.ok(graphQLProvider.getGraphQL().execute(request.getQuery()));</span>
+    }
+
+    @PostMapping(&quot;/graphql/perfume&quot;)
+    public ResponseEntity&lt;ExecutionResult&gt; getPerfumeByQuery(@RequestBody GraphQLRequest request) {
+<span class="fc" id="L73">        return ResponseEntity.ok(graphQLProvider.getGraphQL().execute(request.getQuery()));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

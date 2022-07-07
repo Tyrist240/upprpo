@@ -1,0 +1,44 @@
+#!groovy
+properties([disableConcurrentBuilds()])
+
+pipeline { 
+    agent any
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '4', artifactNumToKeepStr: '4'))
+        timestamps()
+    }
+    stages {
+        stage("Build") {
+            steps {
+                updateGitlabCommitStatus name: 'build', state: 'pending'
+                echo  " ============== start building backend ==================="
+                sh 'mvn compile'
+                echo  " ============== end building backend ====================="
+            }
+            post {
+                success {
+                    updateGitlabCommitStatus name: 'build', state: 'success'
+                    }
+                failure {
+                    updateGitlabCommitStatus name: 'build', state: 'failed'
+                    }
+            }
+        }
+        stage ("Test") {
+            steps {
+                updateGitlabCommitStatus name: 'test', state: 'pending'
+                echo  " ============== start testing backend ==================="
+                sh 'mvn test'
+                echo  " ============== end testing backend ====================="
+            }
+            post {
+                success {
+                    updateGitlabCommitStatus name: 'test', state: 'success'
+                    }
+                failure {
+                    updateGitlabCommitStatus name: 'test', state: 'failed'
+                    }
+            }
+        }
+    }
+}

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GraphQLProvider.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">upprpo</a> &gt; <a href="index.source.html" class="el_package">ru.nsu.store.service.graphql</a> &gt; <span class="el_source">GraphQLProvider.java</span></div><h1>GraphQLProvider.java</h1><pre class="source lang-java linenums">package ru.nsu.store.service.graphql;
+
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.stereotype.Component;
+import graphql.GraphQL;
+import graphql.schema.GraphQLSchema;
+import graphql.schema.idl.RuntimeWiring;
+import graphql.schema.idl.SchemaGenerator;
+import graphql.schema.idl.SchemaParser;
+import graphql.schema.idl.TypeDefinitionRegistry;
+import ru.nsu.store.service.interfaces.OrderService;
+import ru.nsu.store.service.interfaces.PerfumeService;
+import ru.nsu.store.service.interfaces.UserService;
+
+import javax.annotation.PostConstruct;
+import java.io.File;
+import java.io.IOException;
+
+@Component
+@Setter
+@RequiredArgsConstructor
+public class GraphQLProvider {
+
+    private final PerfumeService perfumeService;
+    private final OrderService orderService;
+    private final UserService userService;
+
+    @Value(&quot;classpath:graphql/schemas.graphql&quot;)
+    private Resource resource;
+
+    @Getter
+    private GraphQL graphQL;
+
+    @PostConstruct
+    public void loadSchema() throws IOException {
+<span class="nc" id="L40">        File fileSchema = resource.getFile();</span>
+<span class="nc" id="L41">        TypeDefinitionRegistry typeRegistry = new SchemaParser().parse(fileSchema);</span>
+<span class="nc" id="L42">        RuntimeWiring wiring = buildRuntimeWiring();</span>
+<span class="nc" id="L43">        GraphQLSchema schema = new SchemaGenerator().makeExecutableSchema(typeRegistry, wiring);</span>
+<span class="nc" id="L44">        graphQL = GraphQL.newGraphQL(schema).build();</span>
+<span class="nc" id="L45">    }</span>
+
+    private RuntimeWiring buildRuntimeWiring() {
+<span class="nc" id="L48">        return RuntimeWiring.newRuntimeWiring()</span>
+<span class="nc" id="L49">                .type(&quot;Query&quot;, typeWiring -&gt; typeWiring</span>
+<span class="nc" id="L50">                        .dataFetcher(&quot;perfumes&quot;, perfumeService.getAllPerfumesByQuery())</span>
+<span class="nc" id="L51">                        .dataFetcher(&quot;perfumesIds&quot;, perfumeService.getAllPerfumesByIdsQuery())</span>
+<span class="nc" id="L52">                        .dataFetcher(&quot;perfume&quot;, perfumeService.getPerfumeByQuery())</span>
+<span class="nc" id="L53">                        .dataFetcher(&quot;orders&quot;, orderService.getAllOrdersByQuery())</span>
+<span class="nc" id="L54">                        .dataFetcher(&quot;ordersByEmail&quot;, orderService.getUserOrdersByEmailQuery())</span>
+<span class="nc" id="L55">                        .dataFetcher(&quot;users&quot;, userService.getAllUsersByQuery())</span>
+<span class="nc" id="L56">                        .dataFetcher(&quot;user&quot;, userService.getUserByQuery()))</span>
+<span class="nc" id="L57">                .build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EmailConfiguration.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">upprpo</a> &gt; <a href="index.source.html" class="el_package">ru.nsu.store.configuration</a> &gt; <span class="el_source">EmailConfiguration.java</span></div><h1>EmailConfiguration.java</h1><pre class="source lang-java linenums">package ru.nsu.store.configuration;
+
+import lombok.Setter;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
+import org.thymeleaf.spring5.SpringTemplateEngine;
+import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
+import org.thymeleaf.templateresolver.ITemplateResolver;
+
+import java.util.Properties;
+
+@Configuration
+@Setter
+<span class="fc" id="L17">public class EmailConfiguration {</span>
+
+    @Value(&quot;${spring.mail.host}&quot;)
+    private String host;
+
+    @Value(&quot;${spring.mail.username}&quot;)
+    private String username;
+
+    @Value(&quot;${spring.mail.password}&quot;)
+    private String password;
+
+    @Value(&quot;${spring.mail.port}&quot;)
+    private int port;
+
+    @Value(&quot;${spring.mail.protocol}&quot;)
+    private String protocol;
+
+    @Value(&quot;${spring.mail.properties.mail.smtp.auth}&quot;)
+    private String auth;
+
+    @Value(&quot;${spring.mail.properties.mail.smtp.starttls.enable}&quot;)
+    private String enable;
+
+    @Value(&quot;${mail.debug}&quot;)
+    private String debug;
+
+    @Bean
+    public JavaMailSender getMailSender() {
+<span class="fc" id="L45">        JavaMailSenderImpl mailSender = new JavaMailSenderImpl();</span>
+<span class="fc" id="L46">        mailSender.setHost(host);</span>
+<span class="fc" id="L47">        mailSender.setPort(port);</span>
+<span class="fc" id="L48">        mailSender.setUsername(username);</span>
+<span class="fc" id="L49">        mailSender.setPassword(password);</span>
+<span class="fc" id="L50">        Properties mailProperties = mailSender.getJavaMailProperties();</span>
+<span class="fc" id="L51">        mailProperties.setProperty(&quot;mail.transport.protocol&quot;, protocol);</span>
+<span class="fc" id="L52">        mailProperties.setProperty(&quot;mail.debug&quot;, debug);</span>
+<span class="fc" id="L53">        mailProperties.setProperty(&quot;mail.smtp.auth&quot;, auth);</span>
+<span class="fc" id="L54">        mailProperties.setProperty(&quot;mail.smtp.starttls.enable&quot;, enable);</span>
+<span class="fc" id="L55">        return mailSender;</span>
+    }
+
+    @Bean
+    public ITemplateResolver thymeleafTemplateResolver() {
+<span class="fc" id="L60">        ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();</span>
+<span class="fc" id="L61">        templateResolver.setPrefix(&quot;mail-templates/&quot;);</span>
+<span class="fc" id="L62">        templateResolver.setSuffix(&quot;.html&quot;);</span>
+<span class="fc" id="L63">        templateResolver.setTemplateMode(&quot;HTML&quot;);</span>
+<span class="fc" id="L64">        templateResolver.setCharacterEncoding(&quot;UTF-8&quot;);</span>
+<span class="fc" id="L65">        return templateResolver;</span>
+    }
+
+    @Bean
+    public SpringTemplateEngine thymeleafTemplateEngine() {
+<span class="fc" id="L70">        SpringTemplateEngine templateEngine = new SpringTemplateEngine();</span>
+<span class="fc" id="L71">        templateEngine.setTemplateResolver(thymeleafTemplateResolver());</span>
+<span class="fc" id="L72">        return templateEngine;</span>
+    }
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

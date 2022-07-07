@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InputFieldException.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">upprpo</a> &gt; <a href="index.source.html" class="el_package">ru.nsu.store.exception</a> &gt; <span class="el_source">InputFieldException.java</span></div><h1>InputFieldException.java</h1><pre class="source lang-java linenums">package ru.nsu.store.exception;
+
+import lombok.Getter;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+
+import java.util.Map;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+
+@Getter
+public class InputFieldException extends RuntimeException {
+
+    private final BindingResult bindingResult;
+    private final Map&lt;String, String&gt; errorsMap;
+
+<span class="fc" id="L17">    public InputFieldException(BindingResult bindingResult) {</span>
+<span class="fc" id="L18">        this.bindingResult = bindingResult;</span>
+<span class="fc" id="L19">        this.errorsMap = bindingResult.getFieldErrors().stream().collect(collector);</span>
+<span class="fc" id="L20">    }</span>
+
+<span class="fc" id="L22">    Collector&lt;FieldError, ?, Map&lt;String, String&gt;&gt; collector = Collectors.toMap(</span>
+<span class="nc" id="L23">            fieldError -&gt; fieldError.getField() + &quot;Error&quot;,</span>
+            FieldError::getDefaultMessage
+    );
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserPrincipal.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">upprpo</a> &gt; <a href="index.source.html" class="el_package">ru.nsu.store.security</a> &gt; <span class="el_source">UserPrincipal.java</span></div><h1>UserPrincipal.java</h1><pre class="source lang-java linenums">package ru.nsu.store.security;
+
+import lombok.Data;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import ru.nsu.store.entity.User;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+@Data
+public class UserPrincipal implements UserDetails, OAuth2User {
+
+    private final Long id;
+    private final String email;
+    private final String password;
+    private final Collection&lt;? extends GrantedAuthority&gt; authorities;
+    private Map&lt;String, Object&gt; attributes;
+
+    public static UserPrincipal create(User user) {
+<span class="fc" id="L25">        String userRole = user.getRoles().iterator().next().toString();</span>
+<span class="fc" id="L26">        List&lt;GrantedAuthority&gt; authorities = Collections.singletonList(new SimpleGrantedAuthority(userRole));</span>
+<span class="fc" id="L27">        return new UserPrincipal(user.getId(), user.getEmail(), user.getPassword(), authorities);</span>
+    }
+
+    public static UserPrincipal create(User user, Map&lt;String, Object&gt; attributes) {
+<span class="fc" id="L31">        UserPrincipal userPrincipal = UserPrincipal.create(user);</span>
+<span class="fc" id="L32">        userPrincipal.setAttributes(attributes);</span>
+<span class="fc" id="L33">        return userPrincipal;</span>
+    }
+
+    @Override
+    public Map&lt;String, Object&gt; getAttributes() {
+<span class="fc" id="L38">        return attributes;</span>
+    }
+
+    @Override
+    public String getName() {
+<span class="fc" id="L43">        return email;</span>
+    }
+
+    @Override
+    public Collection&lt;? extends GrantedAuthority&gt; getAuthorities() {
+<span class="fc" id="L48">        return authorities;</span>
+    }
+
+    @Override
+    public String getPassword() {
+<span class="fc" id="L53">        return password;</span>
+    }
+
+    @Override
+    public String getUsername() {
+<span class="fc" id="L58">        return email;</span>
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+<span class="fc" id="L63">        return true;</span>
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+<span class="fc" id="L68">        return true;</span>
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+<span class="fc" id="L73">        return true;</span>
+    }
+
+    @Override
+    public boolean isEnabled() {
+<span class="fc" id="L78">        return true;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

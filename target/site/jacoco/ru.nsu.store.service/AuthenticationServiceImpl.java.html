@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthenticationServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">upprpo</a> &gt; <a href="index.source.html" class="el_package">ru.nsu.store.service</a> &gt; <span class="el_source">AuthenticationServiceImpl.java</span></div><h1>AuthenticationServiceImpl.java</h1><pre class="source lang-java linenums">package ru.nsu.store.service;
+
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import ru.nsu.store.dto.CaptchaResponse;
+import ru.nsu.store.entity.AuthProvider;
+import ru.nsu.store.entity.Role;
+import ru.nsu.store.entity.User;
+import ru.nsu.store.exception.ApiRequestException;
+import ru.nsu.store.exception.EmailException;
+import ru.nsu.store.exception.PasswordException;
+import ru.nsu.store.repository.UserRepository;
+import ru.nsu.store.security.JwtProvider;
+import ru.nsu.store.service.email.MailSender;
+import ru.nsu.store.service.interfaces.AuthenticationService;
+
+import java.util.*;
+
+@Service
+@Setter
+@RequiredArgsConstructor
+public class AuthenticationServiceImpl implements AuthenticationService {
+    private static final String EMAIL_NOT_FOUND_MESSAGE = &quot;Email not found.&quot;;
+
+    private final AuthenticationManager authenticationManager;
+    private final RestTemplate restTemplate;
+    private final JwtProvider jwtProvider;
+    private final MailSender mailSender;
+    private final PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
+
+    @Value(&quot;${hostname}&quot;)
+    private String hostname;
+
+    @Value(&quot;${recaptcha.secret}&quot;)
+    private String secret;
+
+    @Value(&quot;${recaptcha.url}&quot;)
+    private String captchaUrl;
+
+    @Override
+    public Map&lt;String, String&gt; login(String email, String password) {
+        try {
+<span class="fc" id="L52">            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));</span>
+<span class="fc" id="L53">            User user = userRepository.findByEmail(email)</span>
+<span class="pc" id="L54">                    .orElseThrow(() -&gt; new ApiRequestException(EMAIL_NOT_FOUND_MESSAGE, HttpStatus.NOT_FOUND));</span>
+
+<span class="pc bpc" id="L56" title="1 of 2 branches missed.">            if(user.isActive()) {</span>
+<span class="fc" id="L57">                String userRole = user.getRoles().iterator().next().name();</span>
+<span class="fc" id="L58">                String token = jwtProvider.createToken(email, userRole);</span>
+<span class="fc" id="L59">                Map&lt;String, String&gt; response = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L60">                response.put(&quot;email&quot;, email);</span>
+<span class="fc" id="L61">                response.put(&quot;token&quot;, token);</span>
+<span class="fc" id="L62">                response.put(&quot;userRole&quot;, userRole);</span>
+<span class="fc" id="L63">                return response;</span>
+            } else {
+<span class="nc" id="L65">                throw new ApiRequestException(&quot;User is blocked&quot;, HttpStatus.FORBIDDEN);</span>
+            }
+<span class="fc" id="L67">        } catch (AuthenticationException e) {</span>
+<span class="fc" id="L68">            throw new ApiRequestException(&quot;Incorrect password or email&quot;, HttpStatus.FORBIDDEN);</span>
+        }
+    }
+
+    @Override
+    public String registerUser(User user, String captcha, String password2) {
+<span class="fc" id="L74">        String url = String.format(captchaUrl, secret, captcha);</span>
+<span class="fc" id="L75">        restTemplate.postForObject(url, Collections.emptyList(), CaptchaResponse.class);</span>
+
+<span class="pc bpc" id="L77" title="1 of 4 branches missed.">        if (user.getPassword() != null &amp;&amp; !user.getPassword().equals(password2)) {</span>
+<span class="fc" id="L78">            throw new PasswordException(&quot;Passwords do not match.&quot;);</span>
+        }
+<span class="fc" id="L80">        Optional&lt;User&gt; userFromDbOptional = userRepository.findByEmail(user.getEmail());</span>
+
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        if (userFromDbOptional.isPresent()) {</span>
+<span class="fc" id="L83">            throw new EmailException(&quot;Email is already used.&quot;);</span>
+        }
+<span class="fc" id="L85">        user.setActive(false);</span>
+<span class="fc" id="L86">        user.setRoles(Collections.singleton(Role.USER));</span>
+<span class="fc" id="L87">        user.setProvider(AuthProvider.LOCAL);</span>
+<span class="fc" id="L88">        user.setActivationCode(UUID.randomUUID().toString());</span>
+<span class="fc" id="L89">        user.setPassword(passwordEncoder.encode(user.getPassword()));</span>
+<span class="fc" id="L90">        userRepository.save(user);</span>
+
+<span class="fc" id="L92">        String subject = &quot;Activation code&quot;;</span>
+<span class="fc" id="L93">        String template = &quot;registration-template&quot;;</span>
+<span class="fc" id="L94">        Map&lt;String, Object&gt; attributes = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L95">        attributes.put(&quot;firstName&quot;, user.getFirstName());</span>
+<span class="fc" id="L96">        attributes.put(&quot;registrationUrl&quot;, &quot;http://&quot; + hostname + &quot;/activate/&quot; + user.getActivationCode());</span>
+<span class="fc" id="L97">        mailSender.sendMessageHtml(user.getEmail(), subject, template, attributes);</span>
+<span class="fc" id="L98">        return &quot;User successfully registered.&quot;;</span>
+    }
+
+
+
+    @Override
+    public User findByPasswordResetCode(String code) {
+<span class="fc" id="L105">        return userRepository.findByPasswordResetCode(code)</span>
+<span class="pc" id="L106">                .orElseThrow(() -&gt; new ApiRequestException(&quot;Password reset code is invalid!&quot;, HttpStatus.BAD_REQUEST));</span>
+    }
+
+    @Override
+    public String sendPasswordResetCode(String email) {
+<span class="fc" id="L111">        User user = userRepository.findByEmail(email)</span>
+<span class="pc" id="L112">                .orElseThrow(() -&gt; new ApiRequestException(EMAIL_NOT_FOUND_MESSAGE, HttpStatus.NOT_FOUND));</span>
+<span class="fc" id="L113">        user.setPasswordResetCode(UUID.randomUUID().toString());</span>
+<span class="fc" id="L114">        userRepository.save(user);</span>
+
+<span class="fc" id="L116">        String subject = &quot;Password reset&quot;;</span>
+<span class="fc" id="L117">        String template = &quot;password-reset-template&quot;;</span>
+<span class="fc" id="L118">        Map&lt;String, Object&gt; attributes = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L119">        attributes.put(&quot;firstName&quot;, user.getFirstName());</span>
+<span class="fc" id="L120">        attributes.put(&quot;resetUrl&quot;, &quot;http://&quot; + hostname + &quot;/reset/&quot; + user.getPasswordResetCode());</span>
+<span class="fc" id="L121">        mailSender.sendMessageHtml(user.getEmail(), subject, template, attributes);</span>
+<span class="fc" id="L122">        return &quot;Reset password code is send to your E-mail&quot;;</span>
+    }
+
+    @Override
+    public String passwordReset(String email, String password, String password2) {
+<span class="fc bfc" id="L127" title="All 2 branches covered.">        if (password2.isEmpty()) {</span>
+<span class="fc" id="L128">            throw new PasswordException(&quot;Password confirmation cannot be empty.&quot;);</span>
+        }
+<span class="pc bpc" id="L130" title="1 of 4 branches missed.">        if (password != null &amp;&amp; !password.equals(password2)) {</span>
+<span class="fc" id="L131">            throw new PasswordException(&quot;Passwords do not match.&quot;);</span>
+        }
+<span class="fc" id="L133">        User user = userRepository.findByEmail(email)</span>
+<span class="pc" id="L134">                .orElseThrow(() -&gt; new ApiRequestException(EMAIL_NOT_FOUND_MESSAGE, HttpStatus.NOT_FOUND));</span>
+<span class="fc" id="L135">        user.setPassword(passwordEncoder.encode(password));</span>
+<span class="fc" id="L136">        user.setPasswordResetCode(null);</span>
+<span class="fc" id="L137">        userRepository.save(user);</span>
+<span class="fc" id="L138">        return &quot;Password successfully changed!&quot;;</span>
+    }
+
+    @Override
+    public String activateUser(String code) {
+<span class="fc" id="L143">        User user = userRepository.findByActivationCode(code)</span>
+<span class="pc" id="L144">                .orElseThrow(() -&gt; new ApiRequestException(&quot;Activation code not found.&quot;, HttpStatus.NOT_FOUND));</span>
+<span class="fc" id="L145">        user.setActivationCode(null);</span>
+<span class="fc" id="L146">        user.setActive(true);</span>
+<span class="fc" id="L147">        userRepository.save(user);</span>
+<span class="fc" id="L148">        return &quot;User successfully activated.&quot;;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

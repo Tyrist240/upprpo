@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AdminController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">upprpo</a> &gt; <a href="index.source.html" class="el_package">ru.nsu.store.controller</a> &gt; <span class="el_source">AdminController.java</span></div><h1>AdminController.java</h1><pre class="source lang-java linenums">package ru.nsu.store.controller;
+
+
+import graphql.ExecutionResult;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import ru.nsu.store.dto.GraphQLRequest;
+import ru.nsu.store.dto.order.OrderResponse;
+import ru.nsu.store.dto.perfume.PerfumeRequest;
+import ru.nsu.store.dto.perfume.PerfumeResponse;
+import ru.nsu.store.dto.user.UserRequest;
+import ru.nsu.store.dto.user.UserResponse;
+import ru.nsu.store.mapper.OrderMapper;
+import ru.nsu.store.mapper.PerfumeMapper;
+import ru.nsu.store.mapper.UserMapper;
+import ru.nsu.store.service.graphql.GraphQLProvider;
+
+import javax.validation.Valid;
+import java.util.List;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping(&quot;/api/v1/admin&quot;)
+public class AdminController {
+
+    private final UserMapper userMapper;
+    private final PerfumeMapper perfumeMapper;
+    private final OrderMapper orderMapper;
+    private final GraphQLProvider graphQLProvider;
+
+    @PostMapping(&quot;/add&quot;)
+    public ResponseEntity&lt;PerfumeResponse&gt; addPerfume(@RequestPart(name = &quot;file&quot;, required = false) MultipartFile file,
+                                                      @RequestPart(&quot;perfume&quot;) @Valid PerfumeRequest perfume,
+                                                      BindingResult bindingResult) {
+<span class="fc" id="L38">        return ResponseEntity.ok(perfumeMapper.savePerfume(perfume, file, bindingResult));</span>
+    }
+
+    @DeleteMapping(&quot;/delete/{perfumeId}&quot;)
+    public ResponseEntity&lt;List&lt;PerfumeResponse&gt;&gt; deletePerfume(@PathVariable(value = &quot;perfumeId&quot;) Long perfumeId) {
+<span class="fc" id="L43">        return ResponseEntity.ok(perfumeMapper.deleteOrder(perfumeId));</span>
+    }
+
+    @GetMapping(&quot;/orders&quot;)
+    public ResponseEntity&lt;List&lt;OrderResponse&gt;&gt; getAllOrders() {
+<span class="fc" id="L48">        return ResponseEntity.ok(orderMapper.findAllOrders());</span>
+    }
+
+    @PostMapping(&quot;/order&quot;)
+    public ResponseEntity&lt;List&lt;OrderResponse&gt;&gt; getUserOrdersByEmail(@RequestBody UserRequest user) {
+<span class="fc" id="L53">        return ResponseEntity.ok(orderMapper.findOrderByEmail(user.getEmail()));</span>
+    }
+
+    @DeleteMapping(&quot;/order/delete/{orderId}&quot;)
+    public ResponseEntity&lt;List&lt;OrderResponse&gt;&gt; deleteOrder(@PathVariable(value = &quot;orderId&quot;) Long orderId) {
+<span class="fc" id="L58">        return ResponseEntity.ok(orderMapper.deleteOrder(orderId));</span>
+    }
+
+    @GetMapping(&quot;/user/{id}&quot;)
+    public ResponseEntity&lt;UserResponse&gt; getUser(@PathVariable(&quot;id&quot;) Long userId) {
+<span class="fc" id="L63">        return ResponseEntity.ok(userMapper.findUserById(userId));</span>
+    }
+
+    @GetMapping(&quot;/user/all&quot;)
+    public ResponseEntity&lt;List&lt;UserResponse&gt;&gt; getAllUsers() {
+<span class="fc" id="L68">        return ResponseEntity.ok(userMapper.findAllUsers());</span>
+    }
+
+    @GetMapping(&quot;/user/block/{id}&quot;)
+    public void updateUserStatus(@PathVariable(&quot;id&quot;) Long userId) {
+<span class="fc" id="L73">        userMapper.updateUserStatus(userId);</span>
+<span class="fc" id="L74">    }</span>
+
+    @PostMapping(&quot;/graphql/user&quot;)
+    public ResponseEntity&lt;ExecutionResult&gt; getUserByQuery(@RequestBody GraphQLRequest request) {
+<span class="fc" id="L78">        return ResponseEntity.ok(graphQLProvider.getGraphQL().execute(request.getQuery()));</span>
+    }
+
+    @PostMapping(&quot;/graphql/user/all&quot;)
+    public ResponseEntity&lt;ExecutionResult&gt; getAllUsersByQuery(@RequestBody GraphQLRequest request) {
+<span class="fc" id="L83">        return ResponseEntity.ok(graphQLProvider.getGraphQL().execute(request.getQuery()));</span>
+    }
+
+    @PostMapping(&quot;/graphql/orders&quot;)
+    public ResponseEntity&lt;ExecutionResult&gt; getAllOrdersQuery(@RequestBody GraphQLRequest request) {
+<span class="fc" id="L88">        return ResponseEntity.ok(graphQLProvider.getGraphQL().execute(request.getQuery()));</span>
+    }
+
+    @PostMapping(&quot;/graphql/order&quot;)
+    public ResponseEntity&lt;ExecutionResult&gt; getUserOrdersByEmailQuery(@RequestBody GraphQLRequest request) {
+<span class="fc" id="L93">        return ResponseEntity.ok(graphQLProvider.getGraphQL().execute(request.getQuery()));</span>
+    }
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

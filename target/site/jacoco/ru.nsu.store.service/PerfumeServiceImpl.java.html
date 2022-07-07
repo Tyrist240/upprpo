@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PerfumeServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">upprpo</a> &gt; <a href="index.source.html" class="el_package">ru.nsu.store.service</a> &gt; <span class="el_source">PerfumeServiceImpl.java</span></div><h1>PerfumeServiceImpl.java</h1><pre class="source lang-java linenums">package ru.nsu.store.service;
+
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.PutObjectRequest;
+import graphql.schema.DataFetcher;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import ru.nsu.store.entity.Perfume;
+import ru.nsu.store.exception.ApiRequestException;
+import ru.nsu.store.repository.PerfumeRepository;
+import ru.nsu.store.repository.ReviewRepository;
+import ru.nsu.store.service.interfaces.PerfumeService;
+
+import java.io.*;
+import java.util.*;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class PerfumeServiceImpl implements PerfumeService {
+
+    private final PerfumeRepository perfumeRepository;
+    private final ReviewRepository reviewRepository;
+    private final AmazonS3 amazonS3client;
+
+    @Value(&quot;${amazon.s3.bucket.name}&quot;)
+    private String bucketName;
+
+    @Override
+    public DataFetcher&lt;Perfume&gt; getPerfumeByQuery() {
+<span class="nc" id="L35">        return dataFetchingEnvironment -&gt; {</span>
+<span class="nc" id="L36">            Long perfumeId = Long.parseLong(dataFetchingEnvironment.getArgument(&quot;id&quot;));</span>
+<span class="nc" id="L37">            return perfumeRepository.findById(perfumeId).get();</span>
+        };
+    }
+
+    @Override
+    public DataFetcher&lt;List&lt;Perfume&gt;&gt; getAllPerfumesByQuery() {
+<span class="nc" id="L43">        return dataFetchingEnvironment -&gt; perfumeRepository.findAllByOrderByIdAsc();</span>
+    }
+
+    @Override
+    public DataFetcher&lt;List&lt;Perfume&gt;&gt; getAllPerfumesByIdsQuery() {
+<span class="nc" id="L48">        return dataFetchingEnvironment -&gt; {</span>
+<span class="nc" id="L49">            List&lt;String&gt; objects = dataFetchingEnvironment.getArgument(&quot;ids&quot;);</span>
+<span class="nc" id="L50">            List&lt;Long&gt; perfumesId = objects.stream()</span>
+<span class="nc" id="L51">                    .map(Long::parseLong)</span>
+<span class="nc" id="L52">                    .collect(Collectors.toList());</span>
+<span class="nc" id="L53">            return perfumeRepository.findByIdIn(perfumesId);</span>
+        };
+    }
+
+    @Override
+    public Perfume findPerfumeById(Long perfumeId) {
+<span class="fc" id="L59">        return perfumeRepository.findById(perfumeId)</span>
+<span class="pc" id="L60">                .orElseThrow(() -&gt; new ApiRequestException(&quot;Perfume not found.&quot;, HttpStatus.NOT_FOUND));</span>
+    }
+
+    @Override
+    public List&lt;Perfume&gt; findAllPerfumes() {
+<span class="fc" id="L65">        return perfumeRepository.findAllByOrderByIdAsc();</span>
+    }
+
+    @Override
+    public List&lt;Perfume&gt; findPerfumesByIds(List&lt;Long&gt; perfumesId) {
+<span class="fc" id="L70">        return perfumeRepository.findByIdIn(perfumesId);</span>
+    }
+
+    @Override
+    public List&lt;Perfume&gt; filter(List&lt;String&gt; perfumers, List&lt;String&gt; genders, List&lt;Integer&gt; prices,
+                                boolean sortByPrice, List&lt;Integer&gt; years, List&lt;String&gt; volumes,
+                                List&lt;String&gt; types) {
+<span class="fc" id="L77">        List&lt;Perfume&gt; perfumeList = new ArrayList&lt;&gt;();</span>
+
+<span class="pc bpc" id="L79" title="3 of 6 branches missed.">        if (!perfumers.isEmpty() || !genders.isEmpty() || !prices.isEmpty() ||</span>
+<span class="nc bnc" id="L80" title="All 6 branches missed.">            !years.isEmpty() || !volumes.isEmpty() || !types.isEmpty()) {</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">            if (!perfumers.isEmpty()) {</span>
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">                if (!perfumeList.isEmpty()) {</span>
+<span class="nc" id="L83">                    List&lt;Perfume&gt; perfumersList = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">                    for (String perfumer : perfumers) {</span>
+<span class="nc" id="L85">                        perfumersList.addAll(perfumeList.stream()</span>
+<span class="nc" id="L86">                                .filter(perfume -&gt; perfume.getPerfumer().equals(perfumer))</span>
+<span class="nc" id="L87">                                .collect(Collectors.toList()));</span>
+<span class="nc" id="L88">                    }</span>
+<span class="nc" id="L89">                    perfumeList = perfumersList;</span>
+<span class="nc" id="L90">                } else {</span>
+<span class="fc" id="L91">                    perfumeList.addAll(perfumeRepository.findByPerfumerIn(perfumers));</span>
+                }
+            }
+<span class="pc bpc" id="L94" title="1 of 2 branches missed.">            if (!genders.isEmpty()) {</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">                if (!perfumeList.isEmpty()) {</span>
+<span class="fc" id="L96">                    List&lt;Perfume&gt; gendersList = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">                    for (String gender : genders) {</span>
+<span class="fc" id="L98">                        gendersList.addAll(perfumeList.stream()</span>
+<span class="fc" id="L99">                                .filter(perfume -&gt; perfume.getPerfumeGender().equals(gender))</span>
+<span class="fc" id="L100">                                .collect(Collectors.toList()));</span>
+<span class="fc" id="L101">                    }</span>
+<span class="fc" id="L102">                    perfumeList = gendersList;</span>
+<span class="fc" id="L103">                } else {</span>
+<span class="fc" id="L104">                    perfumeList.addAll(perfumeRepository.findByPerfumeGenderIn(genders));</span>
+                }
+            }
+<span class="fc bfc" id="L107" title="All 2 branches covered.">            if (!prices.isEmpty()) {</span>
+<span class="fc" id="L108">                perfumeList = perfumeRepository.findByPriceBetween(prices.get(0), prices.get(1));</span>
+            }
+<span class="fc bfc" id="L110" title="All 2 branches covered.">            if (!years.isEmpty()) {</span>
+<span class="pc bpc" id="L111" title="1 of 2 branches missed.">                if (!perfumeList.isEmpty()) {</span>
+<span class="fc" id="L112">                    List&lt;Perfume&gt; yearsList = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">                    for (Integer year : years) {</span>
+<span class="fc" id="L114">                        yearsList.addAll(perfumeList.stream()</span>
+<span class="fc" id="L115">                                .filter(perfume -&gt; perfume.getYear().equals(year))</span>
+<span class="fc" id="L116">                                .collect(Collectors.toList()));</span>
+<span class="fc" id="L117">                    }</span>
+<span class="fc" id="L118">                    perfumeList = yearsList;</span>
+<span class="fc" id="L119">                } else {</span>
+<span class="nc" id="L120">                    perfumeList.addAll(perfumeRepository.findByYearIn(years));</span>
+                }
+            }
+<span class="fc bfc" id="L123" title="All 2 branches covered.">            if (!volumes.isEmpty()) {</span>
+<span class="pc bpc" id="L124" title="1 of 2 branches missed.">                if (!perfumeList.isEmpty()) {</span>
+<span class="fc" id="L125">                    List&lt;Perfume&gt; volumesList = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L126" title="All 2 branches covered.">                    for (String volume : volumes) {</span>
+<span class="fc" id="L127">                        volumesList.addAll(perfumeList.stream()</span>
+<span class="fc" id="L128">                                .filter(perfume -&gt; perfume.getVolume().equals(volume))</span>
+<span class="fc" id="L129">                                .collect(Collectors.toList()));</span>
+<span class="fc" id="L130">                    }</span>
+<span class="fc" id="L131">                    perfumeList = volumesList;</span>
+<span class="fc" id="L132">                } else {</span>
+<span class="nc" id="L133">                    perfumeList.addAll(perfumeRepository.findByVolumeIn(volumes));</span>
+                }
+            }
+<span class="fc bfc" id="L136" title="All 2 branches covered.">            if (!types.isEmpty()) {</span>
+<span class="pc bpc" id="L137" title="1 of 2 branches missed.">                if (!perfumeList.isEmpty()) {</span>
+<span class="fc" id="L138">                    List&lt;Perfume&gt; typesList = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L139" title="All 2 branches covered.">                    for (String type : types) {</span>
+<span class="fc" id="L140">                        typesList.addAll(perfumeList.stream()</span>
+<span class="fc" id="L141">                                .filter(perfume -&gt; perfume.getType().equals(type))</span>
+<span class="fc" id="L142">                                .collect(Collectors.toList()));</span>
+<span class="fc" id="L143">                    }</span>
+<span class="fc" id="L144">                    perfumeList = typesList;</span>
+<span class="fc" id="L145">                } else {</span>
+<span class="nc" id="L146">                    perfumeList.addAll(perfumeRepository.findByTypeIn(types));</span>
+                }
+            }
+        } else {
+<span class="nc" id="L150">            perfumeList = perfumeRepository.findAllByOrderByIdAsc();</span>
+        }
+<span class="fc bfc" id="L152" title="All 2 branches covered.">        if (sortByPrice) {</span>
+<span class="fc" id="L153">            perfumeList.sort(Comparator.comparing(Perfume::getPrice));</span>
+        } else {
+<span class="fc" id="L155">            perfumeList.sort((perfume1, perfume2) -&gt; perfume2.getPrice().compareTo(perfume1.getPrice()));</span>
+        }
+<span class="fc" id="L157">        return perfumeList;</span>
+    }
+
+    @Override
+    public List&lt;Perfume&gt; findByPerfumerOrderByPriceDesc(String perfumer) {
+<span class="fc" id="L162">        return perfumeRepository.findByPerfumerOrderByPriceDesc(perfumer);</span>
+    }
+
+    @Override
+    public List&lt;Perfume&gt; findByPerfumeGenderOrderByPriceDesc(String perfumeGender) {
+<span class="fc" id="L167">        return perfumeRepository.findByPerfumeGenderOrderByPriceDesc(perfumeGender);</span>
+    }
+
+    @Override
+    public Perfume savePerfume(Perfume perfume, MultipartFile multipartFile) {
+<span class="fc bfc" id="L172" title="All 2 branches covered.">        if (multipartFile == null) {</span>
+<span class="fc" id="L173">            perfume.setFilename(amazonS3client.getUrl(bucketName, &quot;empty.jpg&quot;).toString());</span>
+        } else {
+<span class="fc" id="L175">            File file = new File(multipartFile.getOriginalFilename());</span>
+<span class="nc" id="L176">            try (FileOutputStream fos = new FileOutputStream(file)) {</span>
+<span class="nc" id="L177">                fos.write(multipartFile.getBytes());</span>
+<span class="fc" id="L178">            } catch (IOException e) {</span>
+<span class="fc" id="L179">                e.printStackTrace();</span>
+<span class="nc" id="L180">            }</span>
+<span class="fc" id="L181">            String fileName = UUID.randomUUID().toString() + &quot;.&quot; + multipartFile.getOriginalFilename();</span>
+<span class="fc" id="L182">            amazonS3client.putObject(new PutObjectRequest(bucketName, fileName, file));</span>
+<span class="fc" id="L183">            perfume.setFilename(amazonS3client.getUrl(bucketName, fileName).toString());</span>
+<span class="fc" id="L184">            file.delete();</span>
+        }
+<span class="fc" id="L186">        return perfumeRepository.save(perfume);</span>
+    }
+
+    @Override
+    @Transactional
+    public List&lt;Perfume&gt; deletePerfume(Long perfumeId) {
+<span class="fc" id="L192">        Perfume perfume = perfumeRepository.findById(perfumeId)</span>
+<span class="pc" id="L193">                .orElseThrow(() -&gt; new ApiRequestException(&quot;Perfume not found.&quot;, HttpStatus.NOT_FOUND));</span>
+<span class="pc" id="L194">        perfume.getReviews().forEach(review -&gt; reviewRepository.deleteById(review.getId()));</span>
+<span class="fc" id="L195">        perfumeRepository.delete(perfume);</span>
+<span class="fc" id="L196">        return perfumeRepository.findAllByOrderByIdAsc();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

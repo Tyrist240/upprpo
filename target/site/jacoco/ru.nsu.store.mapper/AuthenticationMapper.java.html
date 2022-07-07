@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthenticationMapper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">upprpo</a> &gt; <a href="index.source.html" class="el_package">ru.nsu.store.mapper</a> &gt; <span class="el_source">AuthenticationMapper.java</span></div><h1>AuthenticationMapper.java</h1><pre class="source lang-java linenums">package ru.nsu.store.mapper;
+
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+import org.springframework.validation.BindingResult;
+import ru.nsu.store.dto.PasswordResetRequest;
+import ru.nsu.store.dto.RegistrationRequest;
+import ru.nsu.store.dto.jwt.AuthenticationRequest;
+import ru.nsu.store.dto.jwt.AuthenticationResponse;
+import ru.nsu.store.dto.user.UserResponse;
+import ru.nsu.store.entity.User;
+import ru.nsu.store.exception.InputFieldException;
+import ru.nsu.store.service.interfaces.AuthenticationService;
+
+import java.util.Map;
+
+@Component
+@RequiredArgsConstructor
+public class AuthenticationMapper {
+
+    private final AuthenticationService authenticationService;
+    private final CommonMapper commonMapper;
+
+    public AuthenticationResponse login(AuthenticationRequest request) {
+<span class="fc" id="L26">        Map&lt;String, String&gt; credentials = authenticationService.login(request.getEmail(), request.getPassword());</span>
+<span class="fc" id="L27">        AuthenticationResponse response = new AuthenticationResponse();</span>
+<span class="fc" id="L28">        response.setEmail(credentials.get(&quot;email&quot;));</span>
+<span class="fc" id="L29">        response.setToken(credentials.get(&quot;token&quot;));</span>
+<span class="fc" id="L30">        response.setUserRole(credentials.get(&quot;userRole&quot;));</span>
+<span class="fc" id="L31">        return response;</span>
+    }
+
+    public UserResponse findByPasswordResetCode(String code) {
+<span class="fc" id="L35">        return commonMapper.convertToResponse(authenticationService.findByPasswordResetCode(code), UserResponse.class);</span>
+    }
+
+    public String registerUser(String captcha, RegistrationRequest registrationRequest, BindingResult bindingResult) {
+<span class="fc bfc" id="L39" title="All 2 branches covered.">        if (bindingResult.hasErrors()) {</span>
+<span class="fc" id="L40">            throw new InputFieldException(bindingResult);</span>
+        }
+<span class="fc" id="L42">        User user = commonMapper.convertToEntity(registrationRequest, User.class);</span>
+<span class="fc" id="L43">        return authenticationService.registerUser(user, captcha, registrationRequest.getPassword2());</span>
+    }
+
+    public String activateUser(String code) {
+<span class="fc" id="L47">        return authenticationService.activateUser(code);</span>
+    }
+
+    public String sendPasswordResetCode(String email) {
+<span class="fc" id="L51">        return authenticationService.sendPasswordResetCode(email);</span>
+    }
+
+    public String passwordReset(String email, PasswordResetRequest passwordReset) {
+<span class="fc" id="L55">        return authenticationService.passwordReset(email, passwordReset.getPassword(), passwordReset.getPassword2());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

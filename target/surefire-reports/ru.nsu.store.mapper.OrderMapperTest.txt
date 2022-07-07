@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: ru.nsu.store.mapper.OrderMapperTest
+-------------------------------------------------------------------------------
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.095 s - in ru.nsu.store.mapper.OrderMapperTest
